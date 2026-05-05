@@ -5,16 +5,15 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-
 namespace KSP_DL
 {
     public partial class UncryptKey : Form
     {
-        private const string SupportedVersion = "Kerbal Space Program 1.12.5.3190 (lastest)";
+        private const string SupportedVersion = "Kerbal Space Program 1.12.5.3190 (latest)";
         private const string RepositoryOwner = "Yel0w08";
         private const string RepositoryName = "storage.archive.data";
         private const string RepositoryCommit = "6a4e68875160458baf09aa36fe9ac79fa07ada91";
@@ -31,12 +30,15 @@ namespace KSP_DL
 
         private static readonly HttpClient HttpClient = new();
 
-        private readonly string defaultDownloadFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            "KSP-DL_tmp"
-        );
+        private readonly string launcherDirectory = AppContext.BaseDirectory;
 
         private readonly Dictionary<string, DownloadPreset> downloadPresets;
+        private readonly string[] launchCandidates =
+        {
+            Path.Combine(AppContext.BaseDirectory, "KSP_x64.exe"),
+            Path.Combine(AppContext.BaseDirectory, "KSP-Extracted", "KSP_x64.exe"),
+            Path.Combine(AppContext.BaseDirectory, "KSP-Extracted", "Kerbal Space Program", "KSP_x64.exe"),
+        };
         private CancellationTokenSource? downloadCancellationTokenSource;
         private bool isDownloadInProgress;
         private bool isClosingAfterCleanup;
@@ -64,6 +66,11 @@ namespace KSP_DL
             TypeOfFile.SelectedIndex = 0;
             FormClosing += UncryptKey_FormClosing;
             UpdateStartupWarning();
+            DownloadHintLabel.Text = "Download format";
+            VersionLabel.Text = "Game version";
+            KeyLabel.Text = "Decryption key";
+            LocationLabel.Text = $"Download location: {launcherDirectory}";
+            UpdateLaunchState();
         }
 
         private async void GetButton_Click(object sender, EventArgs e)
@@ -114,7 +121,7 @@ namespace KSP_DL
                 return;
             }
 
-            var downloadFolder = defaultDownloadFolder;
+            var downloadFolder = launcherDirectory;
 
             try
             {
@@ -141,7 +148,7 @@ namespace KSP_DL
 
                 MessageBox.Show(
                     $"Download complete.\nFiles saved in:\n{downloadFolder}",
-                    "Done",
+                    "KSP Download Complete",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information
                 );
@@ -164,6 +171,7 @@ namespace KSP_DL
                 downloadCancellationTokenSource?.Dispose();
                 downloadCancellationTokenSource = null;
                 UnlockControls();
+                UpdateLaunchState();
             }
         }
 
@@ -267,6 +275,8 @@ namespace KSP_DL
             KSP_Version.Enabled = false;
             TypeOfFile.Enabled = false;
             CDKeyInput.Enabled = false;
+            CloseButton.Enabled = false;
+            LaunchButton.Enabled = false;
             SetStatus(status);
             SetProgress(0);
         }
@@ -277,8 +287,10 @@ namespace KSP_DL
             KSP_Version.Enabled = true;
             TypeOfFile.Enabled = true;
             CDKeyInput.Enabled = true;
+            CloseButton.Enabled = true;
             GetButton.Font = new System.Drawing.Font(GetButton.Font.FontFamily, 15);
-            GetButton.Text = "Get";
+            GetButton.Text = TypeOfFile.SelectedItem?.ToString() == "TMP" ? "Clear" : "Download";
+            UpdateLaunchState();
         }
 
         private void SetStatus(string status)
@@ -308,25 +320,25 @@ namespace KSP_DL
 
         private void UpdateStartupWarning()
         {
-            SetKeyWarningText("Warning: you need a key to uncrypt the game");
+            SetKeyWarningText("A valid 32-character decryption key is required.");
 
-            if (HasTemporaryFiles())
+            if (HasDownloadedFiles())
             {
-                SetTmpWarningText("Warning: temporary files were detected.");
+                SetTmpWarningText("Downloaded KSP files were detected in the launcher folder.");
                 return;
             }
 
-            SetTmpWarningText(string.Empty);
+            SetTmpWarningText("Downloads will be saved next to this launcher.");
         }
 
-        private bool HasTemporaryFiles()
+        private bool HasDownloadedFiles()
         {
-            if (!Directory.Exists(defaultDownloadFolder))
+            if (!Directory.Exists(launcherDirectory))
             {
                 return false;
             }
 
-            return Directory.EnumerateFileSystemEntries(defaultDownloadFolder).Any();
+            return GetManagedArtifacts().Any(File.Exists) || Directory.Exists(GetExtractedFolderPath());
         }
 
         private void SetKeyWarningText(string text)
@@ -375,20 +387,27 @@ namespace KSP_DL
             {
                 await WaitForDownloadShutdownAsync();
 
-                if (Directory.Exists(defaultDownloadFolder))
+                foreach (var artifactPath in GetManagedArtifacts())
                 {
-                    Directory.Delete(defaultDownloadFolder, true);
-                    
+                    if (File.Exists(artifactPath))
+                    {
+                        File.Delete(artifactPath);
+                    }
                 }
-               // Application.Restart();
-                //Application.Exit();
-                //System.Diagnostics.Process.Start("KSP-DL.exe");
 
-                //Environment.Exit(0);
-                //fuk ristart
+                var extractedFolder = GetExtractedFolderPath();
+                if (Directory.Exists(extractedFolder))
+                {
+                    Directory.Delete(extractedFolder, true);
+                }
             }
             catch
             {
+            }
+            finally
+            {
+                UpdateStartupWarning();
+                UpdateLaunchState();
             }
         }
 
@@ -398,7 +417,12 @@ namespace KSP_DL
             {
                 LockControls("Clearing temp files...");
                 await CleanupTemporaryFilesAsync();
-
+                MessageBox.Show(
+                    "KSP download artifacts were removed from the launcher folder.",
+                    "Cleanup Complete",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
             }
             catch (Exception ex)
             {
@@ -461,7 +485,7 @@ namespace KSP_DL
                 );
             }
 
-            var outputFolder = Path.Combine(downloadFolder, "Extracted");
+            var outputFolder = Path.Combine(downloadFolder, "KSP-Extracted");
             Directory.CreateDirectory(outputFolder);
 
             var process = Process.Start(
@@ -508,6 +532,47 @@ namespace KSP_DL
             return null;
         }
 
+        private string[] GetManagedArtifacts()
+        {
+            return ArchiveParts
+                .Concat(new[] { "Kerbal Space Program.exe" })
+                .Select(fileName => Path.Combine(launcherDirectory, fileName))
+                .ToArray();
+        }
+
+        private string GetExtractedFolderPath()
+        {
+            return Path.Combine(launcherDirectory, "KSP-Extracted");
+        }
+
+        private void UpdateLaunchState()
+        {
+            var kspPath = FindKspExecutable();
+            var canLaunch = !string.IsNullOrWhiteSpace(kspPath);
+            LaunchButton.Enabled = canLaunch && !isDownloadInProgress;
+            LaunchStatusLabel.Text = canLaunch ? $"Ready: {Path.GetDirectoryName(kspPath)}" : "KSP_x64.exe not found yet";
+        }
+
+        private string? FindKspExecutable()
+        {
+            foreach (var candidate in launchCandidates)
+            {
+                if (File.Exists(candidate))
+                {
+                    return candidate;
+                }
+            }
+
+            if (!Directory.Exists(launcherDirectory))
+            {
+                return null;
+            }
+
+            return Directory
+                .EnumerateFiles(launcherDirectory, "KSP_x64.exe", SearchOption.AllDirectories)
+                .FirstOrDefault();
+        }
+
         private void KSPVersionComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
 
@@ -517,14 +582,11 @@ namespace KSP_DL
         {
             if (TypeOfFile.SelectedItem?.ToString() == "TMP")
             {
-
                 GetButton.Text = "Clear";
-         
-
             }
-            else
+            else if (!isDownloadInProgress)
             {
-
+                GetButton.Text = "Download";
             }
         }
 
@@ -548,6 +610,36 @@ namespace KSP_DL
         private void WarningLabel_Click_1(object sender, EventArgs e)
         {
 
+        }
+
+        private void CloseButton_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private void LaunchButton_Click(object sender, EventArgs e)
+        {
+            var kspPath = FindKspExecutable();
+            if (string.IsNullOrWhiteSpace(kspPath))
+            {
+                MessageBox.Show(
+                    "KSP_x64.exe was not found yet. Extract or install the game first.",
+                    "KSP Not Found",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+                UpdateLaunchState();
+                return;
+            }
+
+            Process.Start(
+                new ProcessStartInfo
+                {
+                    FileName = kspPath,
+                    UseShellExecute = true,
+                    WorkingDirectory = Path.GetDirectoryName(kspPath) ?? launcherDirectory,
+                }
+            );
         }
 
         private sealed record DownloadPreset(string RepositoryFolder, string[] Files);

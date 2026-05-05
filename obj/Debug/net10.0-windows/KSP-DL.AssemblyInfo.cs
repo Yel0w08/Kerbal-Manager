@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("KSP-DL")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6ceb7fd116846140d016ce13676aa5770a706fe8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d5f936dc30144c5cf1c7090a544a5b56f6cd1524")]
 [assembly: System.Reflection.AssemblyProductAttribute("KSP-DL")]
 [assembly: System.Reflection.AssemblyTitleAttribute("KSP-DL")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
