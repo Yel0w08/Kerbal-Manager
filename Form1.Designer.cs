@@ -1,3 +1,5 @@
+using FontAwesome.Sharp;
+
 namespace KSP_DL
 {
     partial class UncryptKey
@@ -19,6 +21,7 @@ namespace KSP_DL
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UncryptKey));
             HeaderPanel = new Panel();
+            HeaderIconPictureBox = new IconPictureBox();
             HeaderSubtitleLabel = new Label();
             HeaderTitleLabel = new Label();
             DetailsPanel = new Panel();
@@ -26,7 +29,7 @@ namespace KSP_DL
             StatusCaptionLabel = new Label();
             WarningLabel = new Label();
             TmpWarning = new Label();
-            GetButton = new Button();
+            GetButton = new IconButton();
             KSP_Version = new ComboBox();
             TypeOfFile = new ComboBox();
             ProgressBar = new ProgressBar();
@@ -36,21 +39,38 @@ namespace KSP_DL
             VersionLabel = new Label();
             KeyLabel = new Label();
             LocationLabel = new Label();
-            CloseButton = new Button();
-            LaunchButton = new Button();
+            CloseButton = new IconButton();
+            LaunchButton = new IconButton();
+            CleanupArchivesCheckBox = new CheckBox();
             HeaderPanel.SuspendLayout();
             DetailsPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)HeaderIconPictureBox).BeginInit();
             SuspendLayout();
             // 
             // HeaderPanel
             // 
             HeaderPanel.BackColor = Color.FromArgb(31, 41, 55);
+            HeaderPanel.Controls.Add(HeaderIconPictureBox);
             HeaderPanel.Controls.Add(HeaderSubtitleLabel);
             HeaderPanel.Controls.Add(HeaderTitleLabel);
             HeaderPanel.Location = new Point(12, 12);
             HeaderPanel.Name = "HeaderPanel";
             HeaderPanel.Size = new Size(560, 104);
             HeaderPanel.TabIndex = 0;
+            // 
+            // HeaderIconPictureBox
+            // 
+            HeaderIconPictureBox.BackColor = Color.Transparent;
+            HeaderIconPictureBox.ForeColor = Color.FromArgb(96, 165, 250);
+            HeaderIconPictureBox.IconChar = IconChar.SatelliteDish;
+            HeaderIconPictureBox.IconColor = Color.FromArgb(96, 165, 250);
+            HeaderIconPictureBox.IconFont = IconFont.Auto;
+            HeaderIconPictureBox.IconSize = 34;
+            HeaderIconPictureBox.Location = new Point(21, 15);
+            HeaderIconPictureBox.Name = "HeaderIconPictureBox";
+            HeaderIconPictureBox.Size = new Size(36, 34);
+            HeaderIconPictureBox.TabIndex = 2;
+            HeaderIconPictureBox.TabStop = false;
             // 
             // HeaderSubtitleLabel
             // 
@@ -65,7 +85,7 @@ namespace KSP_DL
             // 
             HeaderTitleLabel.Font = new Font("Segoe UI", 20F, FontStyle.Bold);
             HeaderTitleLabel.ForeColor = Color.White;
-            HeaderTitleLabel.Location = new Point(18, 15);
+            HeaderTitleLabel.Location = new Point(63, 15);
             HeaderTitleLabel.Name = "HeaderTitleLabel";
             HeaderTitleLabel.Size = new Size(318, 38);
             HeaderTitleLabel.TabIndex = 0;
@@ -81,6 +101,7 @@ namespace KSP_DL
             DetailsPanel.Controls.Add(LocationLabel);
             DetailsPanel.Controls.Add(KeyLabel);
             DetailsPanel.Controls.Add(CDKeyInput);
+            DetailsPanel.Controls.Add(CleanupArchivesCheckBox);
             DetailsPanel.Controls.Add(ProgressBar);
             DetailsPanel.Controls.Add(VersionLabel);
             DetailsPanel.Controls.Add(KSP_Version);
@@ -136,11 +157,19 @@ namespace KSP_DL
             GetButton.FlatStyle = FlatStyle.Flat;
             GetButton.Font = new Font("Segoe UI", 15F);
             GetButton.ForeColor = Color.White;
+            GetButton.IconChar = IconChar.Download;
+            GetButton.IconColor = Color.White;
+            GetButton.IconFont = IconFont.Auto;
+            GetButton.IconSize = 24;
+            GetButton.ImageAlign = ContentAlignment.MiddleLeft;
             GetButton.Location = new Point(12, 429);
             GetButton.Name = "GetButton";
+            GetButton.Padding = new Padding(12, 0, 0, 0);
             GetButton.Size = new Size(215, 62);
             GetButton.TabIndex = 2;
             GetButton.Text = "Download";
+            GetButton.TextAlign = ContentAlignment.MiddleLeft;
+            GetButton.TextImageRelation = TextImageRelation.ImageBeforeText;
             GetButton.UseVisualStyleBackColor = false;
             GetButton.Click += GetButton_Click;
             // 
@@ -166,7 +195,7 @@ namespace KSP_DL
             TypeOfFile.FlatStyle = FlatStyle.Flat;
             TypeOfFile.FormattingEnabled = true;
             TypeOfFile.ForeColor = Color.White;
-            TypeOfFile.Items.AddRange(new object[] { "SFX", ".7z", "TMP" });
+            TypeOfFile.Items.AddRange(new object[] { "SFX", ".7z", "CLEAN" });
             TypeOfFile.Location = new Point(431, 166);
             TypeOfFile.Name = "TypeOfFile";
             TypeOfFile.Size = new Size(101, 23);
@@ -197,6 +226,19 @@ namespace KSP_DL
             CDKeyInput.Size = new Size(512, 23);
             CDKeyInput.TabIndex = 6;
             CDKeyInput.TextChanged += KeyInput_TextChanged;
+            // 
+            // CleanupArchivesCheckBox
+            // 
+            CleanupArchivesCheckBox.AutoSize = true;
+            CleanupArchivesCheckBox.Checked = true;
+            CleanupArchivesCheckBox.CheckState = CheckState.Checked;
+            CleanupArchivesCheckBox.ForeColor = Color.FromArgb(191, 201, 212);
+            CleanupArchivesCheckBox.Location = new Point(20, 185);
+            CleanupArchivesCheckBox.Name = "CleanupArchivesCheckBox";
+            CleanupArchivesCheckBox.Size = new Size(243, 19);
+            CleanupArchivesCheckBox.TabIndex = 13;
+            CleanupArchivesCheckBox.Text = "Offer to clean archive files after launch";
+            CleanupArchivesCheckBox.UseVisualStyleBackColor = true;
             // 
             // DownloadHintLabel
             // 
@@ -245,11 +287,19 @@ namespace KSP_DL
             CloseButton.FlatStyle = FlatStyle.Flat;
             CloseButton.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             CloseButton.ForeColor = Color.White;
+            CloseButton.IconChar = IconChar.Xmark;
+            CloseButton.IconColor = Color.White;
+            CloseButton.IconFont = IconFont.Auto;
+            CloseButton.IconSize = 22;
+            CloseButton.ImageAlign = ContentAlignment.MiddleLeft;
             CloseButton.Location = new Point(467, 429);
             CloseButton.Name = "CloseButton";
+            CloseButton.Padding = new Padding(10, 0, 0, 0);
             CloseButton.Size = new Size(105, 62);
             CloseButton.TabIndex = 5;
             CloseButton.Text = "Close";
+            CloseButton.TextAlign = ContentAlignment.MiddleLeft;
+            CloseButton.TextImageRelation = TextImageRelation.ImageBeforeText;
             CloseButton.UseVisualStyleBackColor = false;
             CloseButton.Click += CloseButton_Click;
             // 
@@ -261,11 +311,19 @@ namespace KSP_DL
             LaunchButton.FlatStyle = FlatStyle.Flat;
             LaunchButton.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             LaunchButton.ForeColor = Color.White;
+            LaunchButton.IconChar = IconChar.Play;
+            LaunchButton.IconColor = Color.FromArgb(148, 163, 184);
+            LaunchButton.IconFont = IconFont.Auto;
+            LaunchButton.IconSize = 24;
+            LaunchButton.ImageAlign = ContentAlignment.MiddleLeft;
             LaunchButton.Location = new Point(239, 429);
             LaunchButton.Name = "LaunchButton";
+            LaunchButton.Padding = new Padding(12, 0, 0, 0);
             LaunchButton.Size = new Size(216, 62);
             LaunchButton.TabIndex = 4;
             LaunchButton.Text = "Launch KSP";
+            LaunchButton.TextAlign = ContentAlignment.MiddleLeft;
+            LaunchButton.TextImageRelation = TextImageRelation.ImageBeforeText;
             LaunchButton.UseVisualStyleBackColor = false;
             LaunchButton.Click += LaunchButton_Click;
             // 
@@ -281,7 +339,7 @@ namespace KSP_DL
             Controls.Add(DetailsPanel);
             Controls.Add(HeaderPanel);
             FormBorderStyle = FormBorderStyle.FixedSingle;
-            Icon = (Icon)resources.GetObject("$this.Icon");
+            Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
             MaximizeBox = false;
             Name = "UncryptKey";
             StartPosition = FormStartPosition.CenterParent;
@@ -290,18 +348,20 @@ namespace KSP_DL
             HeaderPanel.ResumeLayout(false);
             DetailsPanel.ResumeLayout(false);
             DetailsPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)HeaderIconPictureBox).EndInit();
             ResumeLayout(false);
         }
 
         #endregion
 
         private Panel HeaderPanel;
+        private IconPictureBox HeaderIconPictureBox;
         private Label HeaderSubtitleLabel;
         private Label HeaderTitleLabel;
         private Panel DetailsPanel;
         private Label LaunchStatusLabel;
         private Label StatusCaptionLabel;
-        private Button GetButton;
+        private IconButton GetButton;
         private ComboBox KSP_Version;
         private ComboBox TypeOfFile;
         private Label WarningLabel;
@@ -313,7 +373,8 @@ namespace KSP_DL
         private Label VersionLabel;
         private Label KeyLabel;
         private Label LocationLabel;
-        private Button CloseButton;
-        private Button LaunchButton;
+        private IconButton CloseButton;
+        private IconButton LaunchButton;
+        private CheckBox CleanupArchivesCheckBox;
     }
 }

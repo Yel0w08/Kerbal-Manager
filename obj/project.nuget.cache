@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "3DItuVH7tE4=",
+  "dgSpecHash": "4DRIKMsmNkg=",
   "success": true,
   "projectFilePath": "D:\\Dev\\Games\\KSP-DL\\KSP-DL.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\natha\\.nuget\\packages\\fontawesome.sharp\\6.6.0\\fontawesome.sharp.6.6.0.nupkg.sha512"
+  ],
   "logs": []
 }

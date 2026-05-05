@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Windows.Forms;
+using FontAwesome.Sharp;
 
 namespace KSP_DL
 {
@@ -20,7 +21,9 @@ namespace KSP_DL
 
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LauncherForm));
             sidebarPanel = new Panel();
+            heroIconPictureBox = new IconPictureBox();
             libraryStatusBadge = new Label();
             libraryStatusLabel = new Label();
             libraryGameLabel = new Label();
@@ -29,21 +32,23 @@ namespace KSP_DL
             launchPanel = new Panel();
             launchStatusValueLabel = new Label();
             launchStatusTitleLabel = new Label();
+            launchKspButton = new IconButton();
+            cleanArchivesButton = new IconButton();
             footerLabel = new Label();
             detailsPanel = new Panel();
-            launchKspButton = new Button();
             modsStatusValueLabel = new Label();
             modsStatusTitleLabel = new Label();
             installStatusValueLabel = new Label();
             installStatusTitleLabel = new Label();
-            refreshButton = new Button();
-            exitButton = new Button();
-            openDownloadsButton = new Button();
-            openCkanButton = new Button();
-            downloadKspButton = new Button();
+            refreshButton = new IconButton();
+            exitButton = new IconButton();
+            openDownloadsButton = new IconButton();
+            openCkanButton = new IconButton();
+            downloadKspButton = new IconButton();
             subtitleLabel = new Label();
             titleLabel = new Label();
             sidebarPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)heroIconPictureBox).BeginInit();
             contentPanel.SuspendLayout();
             launchPanel.SuspendLayout();
             detailsPanel.SuspendLayout();
@@ -52,6 +57,7 @@ namespace KSP_DL
             // sidebarPanel
             // 
             sidebarPanel.BackColor = Color.FromArgb(22, 28, 37);
+            sidebarPanel.Controls.Add(heroIconPictureBox);
             sidebarPanel.Controls.Add(libraryStatusBadge);
             sidebarPanel.Controls.Add(libraryStatusLabel);
             sidebarPanel.Controls.Add(libraryGameLabel);
@@ -62,12 +68,26 @@ namespace KSP_DL
             sidebarPanel.Size = new Size(220, 520);
             sidebarPanel.TabIndex = 0;
             // 
+            // heroIconPictureBox
+            // 
+            heroIconPictureBox.BackColor = Color.Transparent;
+            heroIconPictureBox.ForeColor = Color.FromArgb(96, 165, 250);
+            heroIconPictureBox.IconChar = IconChar.Rocket;
+            heroIconPictureBox.IconColor = Color.FromArgb(96, 165, 250);
+            heroIconPictureBox.IconFont = IconFont.Auto;
+            heroIconPictureBox.IconSize = 40;
+            heroIconPictureBox.Location = new Point(24, 74);
+            heroIconPictureBox.Name = "heroIconPictureBox";
+            heroIconPictureBox.Size = new Size(42, 40);
+            heroIconPictureBox.TabIndex = 4;
+            heroIconPictureBox.TabStop = false;
+            // 
             // libraryStatusBadge
             // 
             libraryStatusBadge.BackColor = Color.FromArgb(51, 160, 44);
             libraryStatusBadge.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             libraryStatusBadge.ForeColor = Color.White;
-            libraryStatusBadge.Location = new Point(24, 128);
+            libraryStatusBadge.Location = new Point(24, 145);
             libraryStatusBadge.Name = "libraryStatusBadge";
             libraryStatusBadge.Size = new Size(74, 24);
             libraryStatusBadge.TabIndex = 3;
@@ -77,7 +97,7 @@ namespace KSP_DL
             // libraryStatusLabel
             // 
             libraryStatusLabel.ForeColor = Color.FromArgb(186, 197, 209);
-            libraryStatusLabel.Location = new Point(24, 176);
+            libraryStatusLabel.Location = new Point(24, 193);
             libraryStatusLabel.Name = "libraryStatusLabel";
             libraryStatusLabel.Size = new Size(170, 83);
             libraryStatusLabel.TabIndex = 2;
@@ -87,7 +107,7 @@ namespace KSP_DL
             // 
             libraryGameLabel.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
             libraryGameLabel.ForeColor = Color.White;
-            libraryGameLabel.Location = new Point(24, 79);
+            libraryGameLabel.Location = new Point(72, 76);
             libraryGameLabel.Name = "libraryGameLabel";
             libraryGameLabel.Size = new Size(170, 38);
             libraryGameLabel.TabIndex = 1;
@@ -128,6 +148,7 @@ namespace KSP_DL
             launchPanel.Controls.Add(launchStatusValueLabel);
             launchPanel.Controls.Add(launchStatusTitleLabel);
             launchPanel.Controls.Add(launchKspButton);
+            launchPanel.Controls.Add(cleanArchivesButton);
             launchPanel.Location = new Point(39, 136);
             launchPanel.Name = "launchPanel";
             launchPanel.Size = new Size(621, 114);
@@ -152,6 +173,53 @@ namespace KSP_DL
             launchStatusTitleLabel.TabIndex = 1;
             launchStatusTitleLabel.Text = "PLAY STATUS";
             // 
+            // launchKspButton
+            // 
+            launchKspButton.BackColor = Color.FromArgb(80, 164, 76);
+            launchKspButton.Enabled = false;
+            launchKspButton.FlatAppearance.BorderSize = 0;
+            launchKspButton.FlatStyle = FlatStyle.Flat;
+            launchKspButton.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            launchKspButton.ForeColor = Color.White;
+            launchKspButton.IconChar = IconChar.Play;
+            launchKspButton.IconColor = Color.FromArgb(148, 163, 184);
+            launchKspButton.IconFont = IconFont.Auto;
+            launchKspButton.IconSize = 24;
+            launchKspButton.ImageAlign = ContentAlignment.MiddleLeft;
+            launchKspButton.Location = new Point(412, 43);
+            launchKspButton.Name = "launchKspButton";
+            launchKspButton.Padding = new Padding(10, 0, 0, 0);
+            launchKspButton.Size = new Size(198, 64);
+            launchKspButton.TabIndex = 0;
+            launchKspButton.Text = "Launch KSP";
+            launchKspButton.TextAlign = ContentAlignment.MiddleLeft;
+            launchKspButton.TextImageRelation = TextImageRelation.ImageBeforeText;
+            launchKspButton.UseVisualStyleBackColor = false;
+            launchKspButton.Click += LaunchKspButton_Click;
+            // 
+            // cleanArchivesButton
+            // 
+            cleanArchivesButton.BackColor = Color.FromArgb(51, 65, 85);
+            cleanArchivesButton.FlatAppearance.BorderSize = 0;
+            cleanArchivesButton.FlatStyle = FlatStyle.Flat;
+            cleanArchivesButton.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            cleanArchivesButton.ForeColor = Color.White;
+            cleanArchivesButton.IconChar = IconChar.Broom;
+            cleanArchivesButton.IconColor = Color.White;
+            cleanArchivesButton.IconFont = IconFont.Auto;
+            cleanArchivesButton.IconSize = 20;
+            cleanArchivesButton.ImageAlign = ContentAlignment.MiddleLeft;
+            cleanArchivesButton.Location = new Point(412, 9);
+            cleanArchivesButton.Name = "cleanArchivesButton";
+            cleanArchivesButton.Padding = new Padding(10, 0, 0, 0);
+            cleanArchivesButton.Size = new Size(198, 28);
+            cleanArchivesButton.TabIndex = 3;
+            cleanArchivesButton.Text = "Clean Archives";
+            cleanArchivesButton.TextAlign = ContentAlignment.MiddleLeft;
+            cleanArchivesButton.TextImageRelation = TextImageRelation.ImageBeforeText;
+            cleanArchivesButton.UseVisualStyleBackColor = false;
+            cleanArchivesButton.Click += CleanArchivesButton_Click;
+            // 
             // footerLabel
             // 
             footerLabel.ForeColor = Color.FromArgb(130, 149, 169);
@@ -172,22 +240,6 @@ namespace KSP_DL
             detailsPanel.Name = "detailsPanel";
             detailsPanel.Size = new Size(621, 126);
             detailsPanel.TabIndex = 7;
-            // 
-            // launchKspButton
-            // 
-            launchKspButton.BackColor = Color.FromArgb(80, 164, 76);
-            launchKspButton.Enabled = false;
-            launchKspButton.FlatAppearance.BorderSize = 0;
-            launchKspButton.FlatStyle = FlatStyle.Flat;
-            launchKspButton.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            launchKspButton.ForeColor = Color.White;
-            launchKspButton.Location = new Point(388, 24);
-            launchKspButton.Name = "launchKspButton";
-            launchKspButton.Size = new Size(198, 64);
-            launchKspButton.TabIndex = 0;
-            launchKspButton.Text = "Launch KSP";
-            launchKspButton.UseVisualStyleBackColor = false;
-            launchKspButton.Click += LaunchKspButton_Click;
             // 
             // modsStatusValueLabel
             // 
@@ -233,11 +285,19 @@ namespace KSP_DL
             refreshButton.FlatAppearance.BorderSize = 0;
             refreshButton.FlatStyle = FlatStyle.Flat;
             refreshButton.ForeColor = Color.White;
+            refreshButton.IconChar = IconChar.SyncAlt;
+            refreshButton.IconColor = Color.White;
+            refreshButton.IconFont = IconFont.Auto;
+            refreshButton.IconSize = 18;
+            refreshButton.ImageAlign = ContentAlignment.MiddleLeft;
             refreshButton.Location = new Point(485, 412);
             refreshButton.Name = "refreshButton";
+            refreshButton.Padding = new Padding(10, 0, 0, 0);
             refreshButton.Size = new Size(175, 46);
             refreshButton.TabIndex = 6;
             refreshButton.Text = "Refresh Status";
+            refreshButton.TextAlign = ContentAlignment.MiddleLeft;
+            refreshButton.TextImageRelation = TextImageRelation.ImageBeforeText;
             refreshButton.UseVisualStyleBackColor = false;
             refreshButton.Click += RefreshButton_Click;
             // 
@@ -247,11 +307,19 @@ namespace KSP_DL
             exitButton.FlatAppearance.BorderSize = 0;
             exitButton.FlatStyle = FlatStyle.Flat;
             exitButton.ForeColor = Color.White;
+            exitButton.IconChar = IconChar.Close;
+            exitButton.IconColor = Color.White;
+            exitButton.IconFont = IconFont.Auto;
+            exitButton.IconSize = 18;
+            exitButton.ImageAlign = ContentAlignment.MiddleLeft;
             exitButton.Location = new Point(485, 412);
             exitButton.Name = "exitButton";
+            exitButton.Padding = new Padding(10, 0, 0, 0);
             exitButton.Size = new Size(81, 46);
             exitButton.TabIndex = 5;
             exitButton.Text = "Exit";
+            exitButton.TextAlign = ContentAlignment.MiddleLeft;
+            exitButton.TextImageRelation = TextImageRelation.ImageBeforeText;
             exitButton.UseVisualStyleBackColor = false;
             exitButton.Click += ExitButton_Click;
             // 
@@ -261,11 +329,19 @@ namespace KSP_DL
             openDownloadsButton.FlatAppearance.BorderSize = 0;
             openDownloadsButton.FlatStyle = FlatStyle.Flat;
             openDownloadsButton.ForeColor = Color.White;
+            openDownloadsButton.IconChar = IconChar.FolderOpen;
+            openDownloadsButton.IconColor = Color.White;
+            openDownloadsButton.IconFont = IconFont.Auto;
+            openDownloadsButton.IconSize = 18;
+            openDownloadsButton.ImageAlign = ContentAlignment.MiddleLeft;
             openDownloadsButton.Location = new Point(262, 412);
             openDownloadsButton.Name = "openDownloadsButton";
+            openDownloadsButton.Padding = new Padding(10, 0, 0, 0);
             openDownloadsButton.Size = new Size(205, 46);
             openDownloadsButton.TabIndex = 4;
             openDownloadsButton.Text = "Open Download Folder";
+            openDownloadsButton.TextAlign = ContentAlignment.MiddleLeft;
+            openDownloadsButton.TextImageRelation = TextImageRelation.ImageBeforeText;
             openDownloadsButton.UseVisualStyleBackColor = false;
             openDownloadsButton.Click += OpenDownloadsButton_Click;
             // 
@@ -275,11 +351,19 @@ namespace KSP_DL
             openCkanButton.FlatAppearance.BorderSize = 0;
             openCkanButton.FlatStyle = FlatStyle.Flat;
             openCkanButton.ForeColor = Color.White;
+            openCkanButton.IconChar = IconChar.PuzzlePiece;
+            openCkanButton.IconColor = Color.White;
+            openCkanButton.IconFont = IconFont.Auto;
+            openCkanButton.IconSize = 18;
+            openCkanButton.ImageAlign = ContentAlignment.MiddleLeft;
             openCkanButton.Location = new Point(39, 412);
             openCkanButton.Name = "openCkanButton";
+            openCkanButton.Padding = new Padding(10, 0, 0, 0);
             openCkanButton.Size = new Size(205, 46);
             openCkanButton.TabIndex = 3;
             openCkanButton.Text = "Open CKAN (Mods)";
+            openCkanButton.TextAlign = ContentAlignment.MiddleLeft;
+            openCkanButton.TextImageRelation = TextImageRelation.ImageBeforeText;
             openCkanButton.UseVisualStyleBackColor = false;
             openCkanButton.Click += OpenCkanButton_Click;
             // 
@@ -290,11 +374,19 @@ namespace KSP_DL
             downloadKspButton.FlatStyle = FlatStyle.Flat;
             downloadKspButton.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             downloadKspButton.ForeColor = Color.White;
+            downloadKspButton.IconChar = IconChar.Download;
+            downloadKspButton.IconColor = Color.White;
+            downloadKspButton.IconFont = IconFont.Auto;
+            downloadKspButton.IconSize = 18;
+            downloadKspButton.ImageAlign = ContentAlignment.MiddleLeft;
             downloadKspButton.Location = new Point(579, 412);
             downloadKspButton.Name = "downloadKspButton";
+            downloadKspButton.Padding = new Padding(10, 0, 0, 0);
             downloadKspButton.Size = new Size(81, 46);
             downloadKspButton.TabIndex = 2;
             downloadKspButton.Text = "Get KSP";
+            downloadKspButton.TextAlign = ContentAlignment.MiddleLeft;
+            downloadKspButton.TextImageRelation = TextImageRelation.ImageBeforeText;
             downloadKspButton.UseVisualStyleBackColor = false;
             downloadKspButton.Click += DownloadKspButton_Click;
             // 
@@ -326,6 +418,7 @@ namespace KSP_DL
             Controls.Add(contentPanel);
             Controls.Add(sidebarPanel);
             FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "LauncherForm";
@@ -333,6 +426,7 @@ namespace KSP_DL
             Text = "KSP Launcher";
             Load += LauncherForm_Load;
             sidebarPanel.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)heroIconPictureBox).EndInit();
             contentPanel.ResumeLayout(false);
             launchPanel.ResumeLayout(false);
             detailsPanel.ResumeLayout(false);
@@ -342,6 +436,7 @@ namespace KSP_DL
         #endregion
 
         private Panel sidebarPanel;
+        private IconPictureBox heroIconPictureBox;
         private Label libraryStatusBadge;
         private Label libraryStatusLabel;
         private Label libraryGameLabel;
@@ -352,16 +447,17 @@ namespace KSP_DL
         private Label launchStatusTitleLabel;
         private Label footerLabel;
         private Panel detailsPanel;
-        private Button launchKspButton;
+        private IconButton launchKspButton;
+        private IconButton cleanArchivesButton;
         private Label modsStatusValueLabel;
         private Label modsStatusTitleLabel;
         private Label installStatusValueLabel;
         private Label installStatusTitleLabel;
-        private Button refreshButton;
-        private Button exitButton;
-        private Button openDownloadsButton;
-        private Button openCkanButton;
-        private Button downloadKspButton;
+        private IconButton refreshButton;
+        private IconButton exitButton;
+        private IconButton openDownloadsButton;
+        private IconButton openCkanButton;
+        private IconButton downloadKspButton;
         private Label subtitleLabel;
         private Label titleLabel;
 

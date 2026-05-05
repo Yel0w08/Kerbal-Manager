@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using FontAwesome.Sharp;
 
 namespace KSP_DL
 {
@@ -13,6 +14,15 @@ namespace KSP_DL
     {
         private const string CkanDownloadUrl = "https://github.com/KSP-CKAN/CKAN/releases/latest/download/CKAN.exe";
         private static readonly HttpClient HttpClient = new();
+        private static readonly string[] KspArchiveParts =
+        {
+            "Kerbal Space Program.7z.001",
+            "Kerbal Space Program.7z.002",
+            "Kerbal Space Program.7z.003",
+            "Kerbal Space Program.7z.004",
+            "Kerbal Space Program.7z.005",
+            "Kerbal Space Program.exe",
+        };
 
         private static readonly string[] CkanCandidates =
         {
@@ -100,16 +110,56 @@ namespace KSP_DL
             var kspPath = FindKspExecutable();
             if (string.IsNullOrWhiteSpace(kspPath))
             {
+                DownloadKspButton_Click(sender, e);
+                return;
+            }
+
+            LaunchExecutable(kspPath);
+        }
+
+        private async void CleanArchivesButton_Click(object sender, EventArgs e)
+        {
+            if (!HasArchiveDownloads())
+            {
                 MessageBox.Show(
-                    "KSP_x64.exe was not found in the launcher folder yet.\nDownload or extract KSP first.",
-                    "KSP Not Found",
+                    "No archive download files were found in this launcher folder.",
+                    "Nothing To Clean",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information
                 );
                 return;
             }
 
-            LaunchExecutable(kspPath);
+            var confirm = MessageBox.Show(
+                "Remove downloaded archive files now?\nYour extracted or installed KSP files will be kept.",
+                "Clean Download Files",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question
+            );
+
+            if (confirm != DialogResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
+                SetBusyState(true, "Cleaning archive files...");
+                await CleanupArchiveDownloadsAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Cleanup failed:\n{ex.Message}",
+                    "Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+            finally
+            {
+                SetBusyState(false);
+            }
         }
 
         private void ExitButton_Click(object sender, EventArgs e)
@@ -130,10 +180,16 @@ namespace KSP_DL
                 : downloadsPrepared ? "KSP files detected" : "Ready to download";
             ModsStatusValueLabel.Text = ckanInstalled ? "CKAN ready" : "CKAN missing";
             LaunchStatusValueLabel.Text = canLaunchKsp ? "Launch available" : "Install not detected";
-            launchKspButton.Enabled = canLaunchKsp;
+            launchKspButton.Enabled = true;
+            launchKspButton.Text = canLaunchKsp ? "Launch KSP" : "Install KSP";
+            launchKspButton.IconChar = canLaunchKsp ? IconChar.Play : IconChar.Download;
+            launchKspButton.IconColor = Color.White;
+            cleanArchivesButton.Enabled = HasArchiveDownloads();
             FooterLabel.Text = canLaunchKsp
                 ? $"Launch target: {kspExecutablePath}"
-                : ckanInstalled
+                : downloadsPrepared
+                    ? "KSP package files are here. Finish extraction, then launch from this panel."
+                    : ckanInstalled
                     ? "Mods are ready to launch through CKAN."
                     : "Click Open CKAN to download it into this launcher folder.";
         }
@@ -206,6 +262,26 @@ namespace KSP_DL
             });
         }
 
+        private bool HasArchiveDownloads()
+        {
+            return KspArchiveParts.Any(fileName => File.Exists(Path.Combine(launcherDirectory, fileName)));
+        }
+
+        private async Task CleanupArchiveDownloadsAsync()
+        {
+            await Task.Run(() =>
+            {
+                foreach (var fileName in KspArchiveParts)
+                {
+                    var path = Path.Combine(launcherDirectory, fileName);
+                    if (File.Exists(path))
+                    {
+                        File.Delete(path);
+                    }
+                }
+            });
+        }
+
         private string? FindKspExecutable()
         {
             var directCandidates = new[]
@@ -252,6 +328,7 @@ namespace KSP_DL
             openDownloadsButton.Enabled = !isBusy;
             refreshButton.Enabled = !isBusy;
             exitButton.Enabled = !isBusy;
+            cleanArchivesButton.Enabled = !isBusy && HasArchiveDownloads();
 
             if (title is not null)
             {

@@ -6,9 +6,11 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Drawing;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using FontAwesome.Sharp;
 namespace KSP_DL
 {
     public partial class UncryptKey : Form
@@ -30,7 +32,7 @@ namespace KSP_DL
 
         private static readonly HttpClient HttpClient = new();
 
-        private readonly string launcherDirectory = AppContext.BaseDirectory;
+        private readonly string launcherDirectory = LauncherEnvironment.LauncherDirectory;
 
         private readonly Dictionary<string, DownloadPreset> downloadPresets;
         private readonly string[] launchCandidates =
@@ -42,6 +44,7 @@ namespace KSP_DL
         private CancellationTokenSource? downloadCancellationTokenSource;
         private bool isDownloadInProgress;
         private bool isClosingAfterCleanup;
+        private string autoDetectedKeyPath = string.Empty;
 
         public UncryptKey()
         {
@@ -70,21 +73,31 @@ namespace KSP_DL
             VersionLabel.Text = "Game version";
             KeyLabel.Text = "Decryption key";
             LocationLabel.Text = $"Download location: {launcherDirectory}";
+            TryLoadKeyFromFile();
             UpdateLaunchState();
         }
 
         private async void GetButton_Click(object sender, EventArgs e)
         {
             var selectedFileType = TypeOfFile.SelectedItem?.ToString();
-            if (string.Equals(selectedFileType, "TMP", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(selectedFileType, "CLEAN", StringComparison.OrdinalIgnoreCase))
             {
-                await ClearTemporaryFolderAsync();
+                await ClearTemporaryDownloadsAsync();
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(CDKeyInput.Text))
+            var normalizedKey = NormalizeKey(CDKeyInput.Text);
+            CDKeyInput.Text = normalizedKey;
+
+            if (string.IsNullOrWhiteSpace(normalizedKey))
             {
                 MessageBox.Show("Please enter a decryption key.");
+                return;
+            }
+
+            if (normalizedKey.Length != 32)
+            {
+                MessageBox.Show("The decryption key must contain exactly 32 characters.");
                 return;
             }
 
@@ -95,7 +108,7 @@ namespace KSP_DL
         {
             var selectedVersion = KSP_Version.SelectedItem?.ToString();
             var selectedFileType = TypeOfFile.SelectedItem?.ToString();
-            var cdKey = CDKeyInput.Text.Trim();
+            var cdKey = NormalizeKey(CDKeyInput.Text);
 
             if (string.IsNullOrWhiteSpace(selectedVersion))
             {
@@ -277,6 +290,7 @@ namespace KSP_DL
             CDKeyInput.Enabled = false;
             CloseButton.Enabled = false;
             LaunchButton.Enabled = false;
+            CleanupArchivesCheckBox.Enabled = false;
             SetStatus(status);
             SetProgress(0);
         }
@@ -289,7 +303,8 @@ namespace KSP_DL
             CDKeyInput.Enabled = true;
             CloseButton.Enabled = true;
             GetButton.Font = new System.Drawing.Font(GetButton.Font.FontFamily, 15);
-            GetButton.Text = TypeOfFile.SelectedItem?.ToString() == "TMP" ? "Clear" : "Download";
+            GetButton.Text = TypeOfFile.SelectedItem?.ToString() == "CLEAN" ? "Clean" : "Download";
+            CleanupArchivesCheckBox.Enabled = true;
             UpdateLaunchState();
         }
 
@@ -375,13 +390,13 @@ namespace KSP_DL
             LockControls("Cancelling download...");
             downloadCancellationTokenSource?.Cancel();
 
-            await CleanupTemporaryFilesAsync();
+            await CleanupTemporaryFilesAsync(includeInstalledFiles: true);
 
             isClosingAfterCleanup = true;
             Close();
         }
 
-        private async Task CleanupTemporaryFilesAsync()
+        private async Task CleanupTemporaryFilesAsync(bool includeInstalledFiles)
         {
             try
             {
@@ -395,10 +410,13 @@ namespace KSP_DL
                     }
                 }
 
-                var extractedFolder = GetExtractedFolderPath();
-                if (Directory.Exists(extractedFolder))
+                if (includeInstalledFiles)
                 {
-                    Directory.Delete(extractedFolder, true);
+                    var extractedFolder = GetExtractedFolderPath();
+                    if (Directory.Exists(extractedFolder))
+                    {
+                        Directory.Delete(extractedFolder, true);
+                    }
                 }
             }
             catch
@@ -411,14 +429,14 @@ namespace KSP_DL
             }
         }
 
-        private async Task ClearTemporaryFolderAsync()
+        private async Task ClearTemporaryDownloadsAsync()
         {
             try
             {
-                LockControls("Clearing temp files...");
-                await CleanupTemporaryFilesAsync();
+                LockControls("Cleaning archive files...");
+                await CleanupTemporaryFilesAsync(includeInstalledFiles: false);
                 MessageBox.Show(
-                    "KSP download artifacts were removed from the launcher folder.",
+                    "Downloaded archive files were removed.\nYour extracted game files were kept.",
                     "Cleanup Complete",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information
@@ -550,7 +568,9 @@ namespace KSP_DL
             var kspPath = FindKspExecutable();
             var canLaunch = !string.IsNullOrWhiteSpace(kspPath);
             LaunchButton.Enabled = canLaunch && !isDownloadInProgress;
+            LaunchButton.IconColor = canLaunch ? Color.White : Color.FromArgb(148, 163, 184);
             LaunchStatusLabel.Text = canLaunch ? $"Ready: {Path.GetDirectoryName(kspPath)}" : "KSP_x64.exe not found yet";
+            CleanupArchivesCheckBox.Visible = canLaunch;
         }
 
         private string? FindKspExecutable()
@@ -580,9 +600,9 @@ namespace KSP_DL
 
         private void FileTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (TypeOfFile.SelectedItem?.ToString() == "TMP")
+            if (TypeOfFile.SelectedItem?.ToString() == "CLEAN")
             {
-                GetButton.Text = "Clear";
+                GetButton.Text = "Clean";
             }
             else if (!isDownloadInProgress)
             {
@@ -640,6 +660,21 @@ namespace KSP_DL
                     WorkingDirectory = Path.GetDirectoryName(kspPath) ?? launcherDirectory,
                 }
             );
+
+            if (CleanupArchivesCheckBox.Checked && GetManagedArtifacts().Any(File.Exists))
+            {
+                var cleanupNow = MessageBox.Show(
+                    "KSP launch started.\nRemove the downloaded archive files now?\nYour installed game files will be kept.",
+                    "Clean Download Files",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question
+                );
+
+                if (cleanupNow == DialogResult.Yes)
+                {
+                    _ = CleanupTemporaryFilesAsync(includeInstalledFiles: false);
+                }
+            }
         }
 
         private sealed record DownloadPreset(string RepositoryFolder, string[] Files);

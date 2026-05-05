@@ -12,7 +12,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FontAwesome.Sharp" Version="6.6.0" />
     <Compile Include="Program.cs" />
+    <Compile Include="LauncherEnvironment.cs" />
     <Compile Include="LauncherForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -33,6 +35,10 @@
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="LauncherForm.resx" />
+    <None Include="uncrypt_key">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
