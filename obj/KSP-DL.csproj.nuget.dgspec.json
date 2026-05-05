@@ -52,12 +52,6 @@
         "net10.0-windows": {
           "framework": "net10.0-windows7.0",
           "targetAlias": "net10.0-windows",
-          "dependencies": {
-            "FontAwesome.Sharp": {
-              "target": "Package",
-              "version": "[6.6.0, )"
-            }
-          },
           "imports": [
             "net461",
             "net462",

@@ -39,7 +39,6 @@ C:\tmp\ksp-dl-build-check\KSP-DL.deps.json
 C:\tmp\ksp-dl-build-check\KSP-DL.runtimeconfig.json
 C:\tmp\ksp-dl-build-check\KSP-DL.dll
 C:\tmp\ksp-dl-build-check\KSP-DL.pdb
-D:\Dev\Games\KSP-DL\obj\Debug\net10.0-windows\KSP-DL.csproj.AssemblyReference.cache
 D:\Dev\Games\KSP-DL\obj\Debug\net10.0-windows\KSP_DL.LauncherForm.resources
-D:\Dev\Games\KSP-DL\obj\Debug\net10.0-windows\KSP-DL.csproj.Up2Date
-D:\Dev\Games\KSP-DL\bin\Debug\net10.0-windows\FontAwesome.Sharp.dll
+C:\tmp\ksp-dl-build-check\uncrypt_key
+D:\Dev\Games\KSP-DL\bin\Debug\net10.0-windows\uncrypt_key

@@ -6,7 +6,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using FontAwesome.Sharp;
 
 namespace KSP_DL
 {
@@ -14,16 +13,6 @@ namespace KSP_DL
     {
         private const string CkanDownloadUrl = "https://github.com/KSP-CKAN/CKAN/releases/latest/download/CKAN.exe";
         private static readonly HttpClient HttpClient = new();
-        private static readonly string[] KspArchiveParts =
-        {
-            "Kerbal Space Program.7z.001",
-            "Kerbal Space Program.7z.002",
-            "Kerbal Space Program.7z.003",
-            "Kerbal Space Program.7z.004",
-            "Kerbal Space Program.7z.005",
-            "Kerbal Space Program.exe",
-        };
-
         private static readonly string[] CkanCandidates =
         {
             Path.Combine(AppContext.BaseDirectory, "CKAN.exe"),
@@ -44,8 +33,8 @@ namespace KSP_DL
             ),
         };
 
-        private readonly string launcherDirectory = AppContext.BaseDirectory;
-        private readonly string localCkanPath = Path.Combine(AppContext.BaseDirectory, "CKAN.exe");
+        private readonly string launcherDirectory = LauncherEnvironment.LauncherDirectory;
+        private readonly string localCkanPath = Path.Combine(LauncherEnvironment.LauncherDirectory, "CKAN.exe");
 
         public LauncherForm()
         {
@@ -117,6 +106,35 @@ namespace KSP_DL
             LaunchExecutable(kspPath);
         }
 
+        private void OpenGameFolderButton_Click(object sender, EventArgs e)
+        {
+            var kspPath = FindKspExecutable();
+            if (string.IsNullOrWhiteSpace(kspPath))
+            {
+                MessageBox.Show(
+                    "No KSP installation folder was found yet.",
+                    "Game Folder Unavailable",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+                return;
+            }
+
+            var gameDirectory = Path.GetDirectoryName(kspPath);
+            if (string.IsNullOrWhiteSpace(gameDirectory))
+            {
+                return;
+            }
+
+            Process.Start(
+                new ProcessStartInfo
+                {
+                    FileName = gameDirectory,
+                    UseShellExecute = true,
+                }
+            );
+        }
+
         private async void CleanArchivesButton_Click(object sender, EventArgs e)
         {
             if (!HasArchiveDownloads())
@@ -173,6 +191,7 @@ namespace KSP_DL
             var kspExecutablePath = FindKspExecutable();
             var downloadsPrepared = HasKspDownloads();
             var canLaunchKsp = !string.IsNullOrWhiteSpace(kspExecutablePath);
+            var hasKey = LauncherEnvironment.TryReadDecryptionKey(out _, out var keySourcePath);
 
             LibraryStatusLabel.Text = "Community launcher for Kerbal Space Program downloads and mods.";
             InstallStatusValueLabel.Text = canLaunchKsp
@@ -182,9 +201,15 @@ namespace KSP_DL
             LaunchStatusValueLabel.Text = canLaunchKsp ? "Launch available" : "Install not detected";
             launchKspButton.Enabled = true;
             launchKspButton.Text = canLaunchKsp ? "Launch KSP" : "Install KSP";
-            launchKspButton.IconChar = canLaunchKsp ? IconChar.Play : IconChar.Download;
-            launchKspButton.IconColor = Color.White;
+            launchHintLabel.Text = canLaunchKsp
+                ? "Your game files are ready. Launch directly or open the install folder."
+                : downloadsPrepared
+                    ? "KSP packages are present. Finish extraction to unlock direct play."
+                    : "Start here to download KSP into this launcher folder.";
+            openGameFolderButton.Enabled = canLaunchKsp;
             cleanArchivesButton.Enabled = HasArchiveDownloads();
+            KeyStatusValueLabel.Text = hasKey ? "Key ready" : "Key missing";
+            KeySourceLabel.Text = hasKey ? $"Source: {Path.GetFileName(keySourcePath)}" : "Place `uncrypt_key` next to the launcher.";
             FooterLabel.Text = canLaunchKsp
                 ? $"Launch target: {kspExecutablePath}"
                 : downloadsPrepared
@@ -264,16 +289,15 @@ namespace KSP_DL
 
         private bool HasArchiveDownloads()
         {
-            return KspArchiveParts.Any(fileName => File.Exists(Path.Combine(launcherDirectory, fileName)));
+            return LauncherEnvironment.HasArchiveDownloads(launcherDirectory);
         }
 
         private async Task CleanupArchiveDownloadsAsync()
         {
             await Task.Run(() =>
             {
-                foreach (var fileName in KspArchiveParts)
+                foreach (var path in LauncherEnvironment.GetArchiveArtifactPaths(launcherDirectory))
                 {
-                    var path = Path.Combine(launcherDirectory, fileName);
                     if (File.Exists(path))
                     {
                         File.Delete(path);
@@ -284,29 +308,7 @@ namespace KSP_DL
 
         private string? FindKspExecutable()
         {
-            var directCandidates = new[]
-            {
-                Path.Combine(launcherDirectory, "KSP_x64.exe"),
-                Path.Combine(launcherDirectory, "KSP-Extracted", "KSP_x64.exe"),
-                Path.Combine(launcherDirectory, "KSP-Extracted", "Kerbal Space Program", "KSP_x64.exe"),
-            };
-
-            foreach (var candidate in directCandidates)
-            {
-                if (File.Exists(candidate))
-                {
-                    return candidate;
-                }
-            }
-
-            if (!Directory.Exists(launcherDirectory))
-            {
-                return null;
-            }
-
-            return Directory
-                .EnumerateFiles(launcherDirectory, "KSP_x64.exe", SearchOption.AllDirectories)
-                .FirstOrDefault();
+            return LauncherEnvironment.FindKspExecutable(launcherDirectory);
         }
 
         private void LaunchExecutable(string path)
@@ -329,6 +331,7 @@ namespace KSP_DL
             refreshButton.Enabled = !isBusy;
             exitButton.Enabled = !isBusy;
             cleanArchivesButton.Enabled = !isBusy && HasArchiveDownloads();
+            openGameFolderButton.Enabled = !isBusy && !string.IsNullOrWhiteSpace(FindKspExecutable());
 
             if (title is not null)
             {

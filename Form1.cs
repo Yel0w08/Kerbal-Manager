@@ -10,7 +10,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using FontAwesome.Sharp;
 namespace KSP_DL
 {
     public partial class UncryptKey : Form
@@ -35,12 +34,6 @@ namespace KSP_DL
         private readonly string launcherDirectory = LauncherEnvironment.LauncherDirectory;
 
         private readonly Dictionary<string, DownloadPreset> downloadPresets;
-        private readonly string[] launchCandidates =
-        {
-            Path.Combine(AppContext.BaseDirectory, "KSP_x64.exe"),
-            Path.Combine(AppContext.BaseDirectory, "KSP-Extracted", "KSP_x64.exe"),
-            Path.Combine(AppContext.BaseDirectory, "KSP-Extracted", "Kerbal Space Program", "KSP_x64.exe"),
-        };
         private CancellationTokenSource? downloadCancellationTokenSource;
         private bool isDownloadInProgress;
         private bool isClosingAfterCleanup;
@@ -75,6 +68,7 @@ namespace KSP_DL
             LocationLabel.Text = $"Download location: {launcherDirectory}";
             TryLoadKeyFromFile();
             UpdateLaunchState();
+            UpdateExtractionFolderState();
         }
 
         private async void GetButton_Click(object sender, EventArgs e)
@@ -165,6 +159,8 @@ namespace KSP_DL
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information
                 );
+
+                OpenExtractionFolderButton.Enabled = Directory.Exists(GetExtractedFolderPath());
             }
             catch (OperationCanceledException)
             {
@@ -185,6 +181,7 @@ namespace KSP_DL
                 downloadCancellationTokenSource = null;
                 UnlockControls();
                 UpdateLaunchState();
+                UpdateExtractionFolderState();
             }
         }
 
@@ -290,7 +287,7 @@ namespace KSP_DL
             CDKeyInput.Enabled = false;
             CloseButton.Enabled = false;
             LaunchButton.Enabled = false;
-            CleanupArchivesCheckBox.Enabled = false;
+            
             SetStatus(status);
             SetProgress(0);
         }
@@ -304,8 +301,9 @@ namespace KSP_DL
             CloseButton.Enabled = true;
             GetButton.Font = new System.Drawing.Font(GetButton.Font.FontFamily, 15);
             GetButton.Text = TypeOfFile.SelectedItem?.ToString() == "CLEAN" ? "Clean" : "Download";
-            CleanupArchivesCheckBox.Enabled = true;
+       
             UpdateLaunchState();
+            UpdateExtractionFolderState();
         }
 
         private void SetStatus(string status)
@@ -379,6 +377,22 @@ namespace KSP_DL
             TmpWarning.Text = text;
         }
 
+        private void TryLoadKeyFromFile()
+        {
+            if (LauncherEnvironment.TryReadDecryptionKey(out var detectedKey, out var sourcePath))
+            {
+                autoDetectedKeyPath = sourcePath;
+                CDKeyInput.Text = NormalizeKey(detectedKey);
+                KeyStatusLabel.Text = $"Key detected automatically from {Path.GetFileName(sourcePath)}";
+                KeyStatusLabel.ForeColor = Color.FromArgb(34, 197, 94);
+                return;
+            }
+
+            autoDetectedKeyPath = string.Empty;
+            KeyStatusLabel.Text = "No key file detected. Paste your 32-character key here.";
+            KeyStatusLabel.ForeColor = Color.FromArgb(191, 201, 212);
+        }
+
         private async void UncryptKey_FormClosing(object? sender, FormClosingEventArgs e)
         {
             if (isClosingAfterCleanup || !isDownloadInProgress)
@@ -427,6 +441,16 @@ namespace KSP_DL
                 UpdateStartupWarning();
                 UpdateLaunchState();
             }
+        }
+
+        private void UpdateExtractionFolderState()
+        {
+            var extractedFolder = GetExtractedFolderPath();
+            var exists = Directory.Exists(extractedFolder);
+            OpenExtractionFolderButton.Enabled = exists;
+            ExtractionStatusLabel.Text = exists
+                ? $"Extracted files: {extractedFolder}"
+                : "No extracted KSP folder detected yet.";
         }
 
         private async Task ClearTemporaryDownloadsAsync()
@@ -552,15 +576,12 @@ namespace KSP_DL
 
         private string[] GetManagedArtifacts()
         {
-            return ArchiveParts
-                .Concat(new[] { "Kerbal Space Program.exe" })
-                .Select(fileName => Path.Combine(launcherDirectory, fileName))
-                .ToArray();
+            return LauncherEnvironment.GetArchiveArtifactPaths(launcherDirectory);
         }
 
         private string GetExtractedFolderPath()
         {
-            return Path.Combine(launcherDirectory, "KSP-Extracted");
+            return LauncherEnvironment.GetExtractedFolderPath(launcherDirectory);
         }
 
         private void UpdateLaunchState()
@@ -568,29 +589,16 @@ namespace KSP_DL
             var kspPath = FindKspExecutable();
             var canLaunch = !string.IsNullOrWhiteSpace(kspPath);
             LaunchButton.Enabled = canLaunch && !isDownloadInProgress;
-            LaunchButton.IconColor = canLaunch ? Color.White : Color.FromArgb(148, 163, 184);
             LaunchStatusLabel.Text = canLaunch ? $"Ready: {Path.GetDirectoryName(kspPath)}" : "KSP_x64.exe not found yet";
-            CleanupArchivesCheckBox.Visible = canLaunch;
+            
+            AutoKeyPathLabel.Text = string.IsNullOrWhiteSpace(autoDetectedKeyPath)
+                ? "Key file: not detected"
+                : $"Key file: {autoDetectedKeyPath}";
         }
 
         private string? FindKspExecutable()
         {
-            foreach (var candidate in launchCandidates)
-            {
-                if (File.Exists(candidate))
-                {
-                    return candidate;
-                }
-            }
-
-            if (!Directory.Exists(launcherDirectory))
-            {
-                return null;
-            }
-
-            return Directory
-                .EnumerateFiles(launcherDirectory, "KSP_x64.exe", SearchOption.AllDirectories)
-                .FirstOrDefault();
+            return LauncherEnvironment.FindKspExecutable(launcherDirectory);
         }
 
         private void KSPVersionComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -616,6 +624,20 @@ namespace KSP_DL
 
         private void KeyInput_TextChanged(object sender, EventArgs e)
         {
+            var currentSelection = CDKeyInput.SelectionStart;
+            var normalized = NormalizeKey(CDKeyInput.Text);
+
+            if (!string.Equals(CDKeyInput.Text, normalized, StringComparison.Ordinal))
+            {
+                CDKeyInput.Text = normalized;
+                CDKeyInput.SelectionStart = Math.Min(currentSelection, CDKeyInput.TextLength);
+            }
+
+            SetKeyWarningText(
+                normalized.Length == 32
+                    ? "Key format looks valid."
+                    : "A valid 32-character decryption key is required."
+            );
         }
 
         private void progressBar_Click(object sender, EventArgs e)
@@ -635,6 +657,30 @@ namespace KSP_DL
         private void CloseButton_Click(object sender, EventArgs e)
         {
             Close();
+        }
+
+        private void OpenExtractionFolderButton_Click(object sender, EventArgs e)
+        {
+            var extractedFolder = GetExtractedFolderPath();
+            if (!Directory.Exists(extractedFolder))
+            {
+                MessageBox.Show(
+                    "No extracted KSP folder is available yet.",
+                    "Folder Unavailable",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+                UpdateExtractionFolderState();
+                return;
+            }
+
+            Process.Start(
+                new ProcessStartInfo
+                {
+                    FileName = extractedFolder,
+                    UseShellExecute = true,
+                }
+            );
         }
 
         private void LaunchButton_Click(object sender, EventArgs e)
@@ -661,7 +707,7 @@ namespace KSP_DL
                 }
             );
 
-            if (CleanupArchivesCheckBox.Checked && GetManagedArtifacts().Any(File.Exists))
+            if (GetManagedArtifacts().Any(File.Exists))
             {
                 var cleanupNow = MessageBox.Show(
                     "KSP launch started.\nRemove the downloaded archive files now?\nYour installed game files will be kept.",
@@ -678,5 +724,17 @@ namespace KSP_DL
         }
 
         private sealed record DownloadPreset(string RepositoryFolder, string[] Files);
+
+        private static string NormalizeKey(string key)
+        {
+            return Regex.Replace(key ?? string.Empty, "[^A-Za-z0-9]", string.Empty)
+                .Trim()
+                .ToUpperInvariant();
+        }
+
+        private void HeaderPanel_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
     }
 }
