@@ -14,6 +14,9 @@
 
   <ItemGroup>
     <Compile Include="Program.cs" />
+    <Compile Include="Constants.cs" />
+    <Compile Include="KspDownloadService.cs" />
+    <Compile Include="ArchiveExtractor.cs" />
     <Compile Include="LauncherEnvironment.cs" />
     <Compile Include="LauncherForm.cs">
       <SubType>Form</SubType>
@@ -21,11 +24,11 @@
     <Compile Include="LauncherForm.Designer.cs">
       <DependentUpon>LauncherForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Form1.cs">
+    <Compile Include="DownloadForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <Compile Include="DownloadForm.Designer.cs">
+      <DependentUpon>DownloadForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -33,8 +36,8 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Content Include="newkspicon_1_0.ico" />
-    <EmbeddedResource Include="Form1.resx">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <EmbeddedResource Include="DownloadForm.resx">
+      <DependentUpon>DownloadForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="LauncherForm.resx" />
     <None Include="uncrypt_key">

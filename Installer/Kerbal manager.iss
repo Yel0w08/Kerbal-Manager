@@ -3,15 +3,15 @@
 ; Non-commercial use only
 
 #define MyAppName "Kerbal Manager"
-#define MyAppVersion "1.0"
+#define MyAppVersion "1.1"
 #define MyAppPublisher "Pikmintea."
-#define MyAppURL "https://github.com/Yel0w08/KSP-DL"
+#define MyAppURL "https://github.com/Yel0w08/Kerbal-Manager"
 #define MyAppExeName "KSP-DL.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{102CD0D5-1715-472D-9818-BC7B055754A9}
+AppId={{6ED0552C-CCD2-4468-A6FC-32BF56FCF20B}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 ;AppVerName={#MyAppName} {#MyAppVersion}
@@ -30,12 +30,12 @@ ArchitecturesAllowed=x64compatible
 ; the 64-bit view of the registry.
 ArchitecturesInstallIn64BitMode=x64compatible
 DisableProgramGroupPage=yes
-; Uncomment the following line to run in non administrative install mode (install for current user only).
-;PrivilegesRequired=lowest
-PrivilegesRequiredOverridesAllowed=dialog
-OutputDir=D:\Dev\Games\KSP-DL\Installer
-OutputBaseFilename=Kerbal manager
-SetupIconFile=D:\Dev\Games\KSP-DL\newkspiconfolder.ico
+; Remove the following line to run in administrative install mode (install for all users).
+PrivilegesRequired=lowest
+PrivilegesRequiredOverridesAllowed=commandline
+OutputDir=D:\Dev\Games\KerbalManager\Installer
+OutputBaseFilename=Kerbal-Manager
+SetupIconFile=D:\Dev\Games\KerbalManager\newkspiconfolder.ico
 SolidCompression=yes
 WizardStyle=modern dynamic
 
@@ -74,8 +74,8 @@ Name: "ukrainian"; MessagesFile: "compiler:Languages\Ukrainian.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "D:\Dev\Games\KSP-DL\bin\Release\net10.0-windows\publish\win-x64\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "D:\Dev\Games\KSP-DL\bin\Release\net10.0-windows\publish\win-x64\uncrypt_key"; DestDir: "{app}"; Flags: ignoreversion
+Source: "D:\Dev\Games\KerbalManager\bin\Release\net10.0-windows\publish\win-x64\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "D:\Dev\Games\KerbalManager\bin\Release\net10.0-windows\publish\win-x64\uncrypt_key"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
